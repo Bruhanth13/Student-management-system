@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management System</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #171e2e;
+    --panel-2: #1e2638;
+    --border: #2a3346;
+    --text: #e7ebf3;
+    --muted: #9aa5b8;
+    --accent: #5b8def;
+    --accent-hover: #4a7bdb;
+    --danger: #e15b5b;
+    --danger-hover: #cf4a4a;
+    --success: #3fbf7f;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 26px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-color: var(--accent); }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar input[type="text"] {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    width: 220px;
+  }
+  .status { font-size: 13px; color: var(--muted); }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 9px 16px;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 6px 12px; font-size: 13px; }
+  .btn-danger:hover { background: var(--danger); color: white; }
+  .btn-edit { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 6px 12px; font-size: 13px; margin-right: 6px; }
+  .btn-edit:hover { background: var(--accent); color: white; }
+  .btn-secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th {
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* Modal */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
+  }
+  .modal h2 { margin: 0 0 18px; font-size: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .field input {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .error-text { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--success);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--danger); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Student Management System</h1>
+    <p>CAM &middot; CSE &middot; CSD branch records</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-branch="csm">CSM</button>
+    <button class="tab" data-branch="cse">CSE</button>
+    <button class="tab" data-branch="csd">CSD</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Search by name or roll no...">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span class="status" id="statusText">Loading...</span>
+      <button class="btn-primary" id="addBtn">+ Add Student</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <table id="studentTable">
+      <thead>
+        <tr>
+          <th>Roll No</th>
+          <th>Name</th>
+          <th>Section</th>
+          <th>Age</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none;">No students found.</div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add Student</h2>
+    <form id="studentForm">
+      <div class="field">
+        <label>Roll No</label>
+        <input type="text" id="f_roll_no" required>
+      </div>
+      <div class="field">
+        <label>Student Name</label>
+        <input type="text" id="f_student_name" required>
+      </div>
+      <div class="field">
+        <label>Section (e.g. cse-a)</label>
+        <input type="text" id="f_sec" required>
+      </div>
+      <div class="field">
+        <label>Age</label>
+        <input type="number" id="f_age" required>
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="text" id="f_ph_number" required>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="f_email" required>
+      </div>
+      <div class="error-text" id="formError"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn-primary" id="saveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = 'http://localhost:5001/api/students';
+
+let currentBranch = 'csm';
+let allStudents = [];
+let editingRollNo = null; // null = adding new, otherwise editing this roll_no
+
+const tabs = document.querySelectorAll('.tab');
+const tableBody = document.getElementById('tableBody');
+const emptyState = document.getElementById('emptyState');
+const statusText = document.getElementById('statusText');
+const searchInput = document.getElementById('searchInput');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const studentForm = document.getElementById('studentForm');
+const formError = document.getElementById('formError');
+const addBtn = document.getElementById('addBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const toast = document.getElementById('toast');
+
+function showToast(msg, isError = false) {
+  toast.textContent = msg;
+  toast.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { toast.className = 'toast'; }, 2500);
+}
+
+async function loadStudents() {
+  statusText.textContent = 'Loading...';
+  tableBody.innerHTML = '';
+  emptyState.style.display = 'none';
+  try {
+    const res = await fetch(`${API_BASE}/${currentBranch}`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    allStudents = await res.json();
+    statusText.textContent = `${allStudents.length} student(s)`;
+    renderTable(allStudents);
+  } catch (err) {
+    statusText.textContent = 'Could not connect to backend';
+    emptyState.style.display = 'block';
+    emptyState.textContent = 'Could not reach the backend at localhost:5001. Make sure your server is running.';
+    console.error(err);
+  }
+}
+
+function renderTable(students) {
+  tableBody.innerHTML = '';
+  if (students.length === 0) {
+    emptyState.style.display = 'block';
+    emptyState.textContent = 'No students found.';
+    return;
+  }
+  emptyState.style.display = 'none';
+  students.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.roll_no}</td>
+      <td>${s.student_name}</td>
+      <td>${s.sec}</td>
+      <td>${s.age}</td>
+      <td>${s.ph_number}</td>
+      <td>${s.email}</td>
+      <td>
+        <button class="btn-edit" data-roll="${s.roll_no}">Edit</button>
+        <button class="btn-danger" data-roll="${s.roll_no}">Delete</button>
+      </td>
+    `;
+    tr.querySelector('.btn-edit').addEventListener('click', () => openEditModal(s));
+    tr.querySelector('.btn-danger').addEventListener('click', () => deleteStudent(s.roll_no, s.student_name));
+    tableBody.appendChild(tr);
+  });
+}
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentBranch = tab.dataset.branch;
+    searchInput.value = '';
+    loadStudents();
+  });
+});
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  const filtered = allStudents.filter(s =>
+    s.student_name.toLowerCase().includes(q) || s.roll_no.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+});
+
+function openAddModal() {
+  editingRollNo = null;
+  modalTitle.textContent = 'Add Student';
+  studentForm.reset();
+  document.getElementById('f_roll_no').disabled = false;
+  formError.style.display = 'none';
+  modalOverlay.classList.add('show');
+}
+
+function openEditModal(s) {
+  editingRollNo = s.roll_no;
+  modalTitle.textContent = 'Edit Student';
+  document.getElementById('f_roll_no').value = s.roll_no;
+  document.getElementById('f_roll_no').disabled = true; // roll_no is the identifier, don't allow changing it
+  document.getElementById('f_student_name').value = s.student_name;
+  document.getElementById('f_sec').value = s.sec;
+  document.getElementById('f_age').value = s.age;
+  document.getElementById('f_ph_number').value = s.ph_number;
+  document.getElementById('f_email').value = s.email;
+  formError.style.display = 'none';
+  modalOverlay.classList.add('show');
+}
+
+function closeModal() {
+  modalOverlay.classList.remove('show');
+}
+
+addBtn.addEventListener('click', openAddModal);
+cancelBtn.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+studentForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  formError.style.display = 'none';
+
+  const payload = {
+    roll_no: document.getElementById('f_roll_no').value.trim(),
+    student_name: document.getElementById('f_student_name').value.trim(),
+    sec: document.getElementById('f_sec').value.trim(),
+    age: Number(document.getElementById('f_age').value),
+    ph_number: document.getElementById('f_ph_number').value.trim(),
+    email: document.getElementById('f_email').value.trim(),
+  };
+
+  try {
+    let res;
+    if (editingRollNo) {
+      res = await fetch(`${API_BASE}/${currentBranch}/${editingRollNo}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      res = await fetch(`${API_BASE}/${currentBranch}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Something went wrong');
+    }
+
+    closeModal();
+    showToast(editingRollNo ? 'Student updated' : 'Student added');
+    loadStudents();
+  } catch (err) {
+    formError.textContent = err.message;
+    formError.style.display = 'block';
+  }
+});
+
+async function deleteStudent(rollNo, name) {
+  if (!confirm(`Delete ${name} (Roll No: ${rollNo})? This cannot be undone.`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/${currentBranch}/${rollNo}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete');
+    showToast('Student deleted');
+    loadStudents();
+  } catch (err) {
+    showToast('Failed to delete student', true);
+    console.error(err);
+  }
+}
+
+// initial load
+loadStudents();
+</script>
+</body>
+</html>
